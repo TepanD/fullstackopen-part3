@@ -1,1 +1,1 @@
-# https://thawing-garden-45844.herokuapp.com/api/persons
+# https://thawing-garden-45844.herokuapp.com/api/people
