@@ -3,6 +3,7 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const Person = require("./models/person");
+
 const app = express();
 
 app.use(express.static("build"));
@@ -20,28 +21,28 @@ app.use(
   morgan(":method :url :status :res[content-length] - :response-time ms :body")
 );
 
-let people = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: 4,
-    name: "Mary Poppendick",
-    number: "39-23- 6423122",
-  },
-];
+// let people = [
+//   {
+//     id: 1,
+//     name: "Arto Hellas",
+//     number: "040-123456",
+//   },
+//   {
+//     id: 2,
+//     name: "Ada Lovelace",
+//     number: "39-44-5323523",
+//   },
+//   {
+//     id: 3,
+//     name: "Dan Abramov",
+//     number: "12-43-234345",
+//   },
+//   {
+//     id: 4,
+//     name: "Mary Poppendick",
+//     number: "39-23- 6423122",
+//   },
+// ];
 
 app.get("/api/people", (request, response) => {
   //response.json(people);
@@ -51,9 +52,6 @@ app.get("/api/people", (request, response) => {
 });
 
 app.get("/api/people/:id", (request, response, next) => {
-  // const id = Number(request.params.id);
-  // const person = people.find((person) => person.id === id);
-
   Person.findById(request.params.id)
     .then((person) => {
       if (person) {
@@ -65,9 +63,9 @@ app.get("/api/people/:id", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-app.post("/api/people", (request, response) => {
+app.post("/api/people", (request, response, next) => {
   const body = request.body;
-  const duplicateName = people.some((person) => person.name === body.name);
+  //const duplicateName = person.some((person) => person.name === body.name);
 
   if (!body.name) {
     return response.status(404).json({
@@ -81,20 +79,27 @@ app.post("/api/people", (request, response) => {
     });
   }
 
-  if (duplicateName) {
-    return response.status(404).json({
-      error: "name must be unique",
-    });
-  }
+  // if (duplicateName) {
+  //   return response.status(404).json({
+  //     error: "name must be unique",
+  //   });
+  // }
 
   const person = new Person({
     name: body.name,
     number: body.number,
   });
 
-  person.save().then((savedPerson) => {
-    response.json(savedPerson);
-  });
+  person
+    .save()
+    .then((savedPerson) => savedPerson.toJSON())
+    .then((formattedPerson) => {
+      response.json(formattedPerson);
+    })
+    .catch((error) => {
+      console.log(error.response);
+      next(error.response);
+    });
 });
 
 app.put("/api/people/:id", (request, response, next) => {
@@ -112,12 +117,12 @@ app.put("/api/people/:id", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-app.delete("/api/people/:id", (request, response) => {
+app.delete("/api/people/:id", (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
     .then((result) => {
       response.status(204).end();
     })
-    .catch((error) => next(error));
+    .catch((error) => next(error.response));
 });
 
 app.get("/api/info", (requests, response) => {
