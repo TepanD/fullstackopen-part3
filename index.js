@@ -10,7 +10,7 @@ app.use(express.static("build"));
 app.use(express.json());
 app.use(cors());
 
-morgan.token("body", function (req, res) {
+morgan.token("body", function (req) {
   if (req.method === "POST") {
     return JSON.stringify(req.body);
   }
@@ -79,12 +79,6 @@ app.post("/api/people", (request, response, next) => {
     });
   }
 
-  // if (duplicateName) {
-  //   return response.status(404).json({
-  //     error: "name must be unique",
-  //   });
-  // }
-
   const person = new Person({
     name: body.name,
     number: body.number,
@@ -119,7 +113,7 @@ app.put("/api/people/:id", (request, response, next) => {
 
 app.delete("/api/people/:id", (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
-    .then((result) => {
+    .then(() => {
       response.status(204).end();
     })
     .catch((error) => next(error));
@@ -128,11 +122,13 @@ app.delete("/api/people/:id", (request, response, next) => {
 app.get("/api/info", (requests, response) => {
   const date = new Date();
 
-  response.send(`
+  Person.find({}).then((people) => {
+    response.send(`
     <div>Phonebook has info for ${people.length} people</div>
     <br/>
     <div>${date}</div>
   `);
+  });
 });
 
 const unknownEndpoint = (request, response) => {
@@ -142,8 +138,6 @@ const unknownEndpoint = (request, response) => {
 app.use(unknownEndpoint);
 
 const errorHandler = (error, request, response, next) => {
-  //console.log(error.message);
-
   if (error.name === "CastError") {
     return response.status(400).send({ error: "malformatted id" });
   }
