@@ -97,8 +97,8 @@ app.post("/api/people", (request, response, next) => {
       response.json(formattedPerson);
     })
     .catch((error) => {
-      console.log(error.response);
-      next(error.response);
+      response.status(409).json({ error });
+      next(error);
     });
 });
 
@@ -122,7 +122,7 @@ app.delete("/api/people/:id", (request, response, next) => {
     .then((result) => {
       response.status(204).end();
     })
-    .catch((error) => next(error.response));
+    .catch((error) => next(error));
 });
 
 app.get("/api/info", (requests, response) => {
@@ -142,7 +142,7 @@ const unknownEndpoint = (request, response) => {
 app.use(unknownEndpoint);
 
 const errorHandler = (error, request, response, next) => {
-  console.log(error.message);
+  //console.log(error.message);
 
   if (error.name === "CastError") {
     return response.status(400).send({ error: "malformatted id" });
